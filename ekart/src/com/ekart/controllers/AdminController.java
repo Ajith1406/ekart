@@ -6,6 +6,8 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.annotation.Resource;
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -18,7 +20,9 @@ import javax.sql.DataSource;
 import com.ekart.entities.Product;
 import com.ekart.entities.User;
 import com.ekart.managers.AdminManager;
+import com.ekart.managers.LoginManager;
 import com.ekart.managers.SearchProduct;
+import com.ekart.utilities.SendMail;
 
 /**
  * Servlet implementation class AdminController
@@ -69,6 +73,9 @@ public class AdminController extends HttpServlet {
 			addProduct(request, response);
 		}
 		if(new AdminManager(dataSource).addProduct(new Product(name, id, imgUrl, rating, price))) {
+			HttpSession session = request.getSession();
+			String mailId = ((User)new AdminManager(dataSource).getUser((String)session.getAttribute("userId"))).getEmailId();
+			sendMail(mailId, new Product(name, id, imgUrl, rating, price));
 			String message = "Item Added successfully";
 			try {
 				response.sendRedirect("/online_shopping/admin?message="+message);
@@ -83,6 +90,24 @@ public class AdminController extends HttpServlet {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	private void sendMail(String mailId, Product product) {
+		String sub ="Product Added successfully";
+		String message = "ITEM ADDED SUCCESSFULLY\n"
+				+ "Product Name:"+product.getName()+"\n"
+						+ "Product Img Url:"+product.getImgUrl()+"\n"
+								+ "product Price:"+product.getPrice();
+		
+		try {
+			SendMail.send(mailId, sub, message);
+		} catch (AddressException e) {
+			System.out.println("Wrong Mail Address");
+			e.printStackTrace();
+		} catch (MessagingException e) {
+			System.out.println("Something wrong while sending mail");
+			e.printStackTrace();
 		}
 	}
 

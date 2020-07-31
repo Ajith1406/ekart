@@ -161,7 +161,42 @@ public class AdminManager {
 		if(users.isEmpty()) {System.out.println("admin manager failed to retirve users"); return null;}
 		return users;
 	}
-
+	
+	public User getUser(String user_id) {
+		Connection conn = null;
+		Statement stmt = null;
+		List<User> users = new ArrayList<User>();
+		
+		try {
+			Class.forName(JDBC_DRIVER);
+			conn = DriverManager.getConnection(DB_URL,USER,PASS);
+			stmt = conn.createStatement();
+			String query = "select user_id, user_name, password, email_id from users where user_id='"+user_id+"';";
+			ResultSet rs = stmt.executeQuery(query);
+			while(rs.next()) {
+				String userId = rs.getString(1);
+				String emailId =rs.getString(4);
+				String name= rs.getString(2);
+				String pass = rs.getString(3);
+				
+				return new User(userId,name,pass,emailId);				
+			}
+			rs.close();
+		} catch (SQLException e) {
+			System.out.println("Error in Admin manager");
+			e.printStackTrace();
+			return null;
+		}catch (Exception e) {
+			System.out.println("Error in Admin manager");
+			e.printStackTrace();
+			return null;
+		}finally{
+			close(conn,stmt);
+		}
+		if(users.isEmpty()) {System.out.println("admin manager failed to retirve user"); return null;}
+		return null;
+	}
+	
 	public boolean getAdmin(String adminId) {
 		Connection conn = null;
 		Statement stmt = null;

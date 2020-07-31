@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -14,9 +16,12 @@ import javax.servlet.http.HttpSession;
 import javax.sql.DataSource;
 
 import com.ekart.entities.Product;
+import com.ekart.entities.User;
+import com.ekart.managers.AdminManager;
 import com.ekart.managers.CartManager;
 import com.ekart.managers.OrdersManager;
 import com.ekart.managers.SearchProduct;
+import com.ekart.utilities.SendMail;
 
 /**
  * Servlet implementation class OrdersController
@@ -54,9 +59,11 @@ public class OrdersController extends HttpServlet {
 		HttpSession session= request.getSession();
 		List<Product> items = (List<Product>) session.getAttribute("items");
 		if(confirm.equals("yes")) {
+			String mailId = ((User)new AdminManager(datasource).getUser((String)session.getAttribute("userId"))).getEmailId();
 			System.out.println(items);
 			try {
 				for (Product product : items) {
+					sendMail(mailId, product);
 					new OrdersManager(datasource).addToOrder(product.getId(), ((String)session.getAttribute("userId")));
 					new CartManager(datasource).removeOneItem(product.getId(), ((String)session.getAttribute("userId")));
 				}
@@ -77,6 +84,23 @@ public class OrdersController extends HttpServlet {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+	private void sendMail(String mailId, Product product) {
+		String sub ="Order Confirmation #"+product.getId();
+		String message = "Ordered Confirm Successfully\n"
+				+ "Product Name:"+product.getName()+"\n"
+						+ "Product Img Url:"+product.getImgUrl()+"\n"
+								+ "product Price:"+product.getPrice();
+		
+		try {
+			SendMail.send(mailId, sub, message);
+		} catch (AddressException e) {
+			System.out.println("Wrong email Address");
+			e.printStackTrace();
+		} catch (MessagingException e) {
+			System.out.println("Something wrong");
+			e.printStackTrace();
 		}
 	}
 
