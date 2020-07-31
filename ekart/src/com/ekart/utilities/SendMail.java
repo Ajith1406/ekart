@@ -6,8 +6,8 @@ import javax.mail.*;
 import javax.mail.internet.*;
 public class SendMail
 { 
-	private static final String userName = "ajithberlin08@gmail.com";
-	private static final String password = "berlin1999";
+	private static final String userName = "username";
+	private static final String password = "password";
 	
     public static void send(String to, String sub, 
                          String msg) throws AddressException, MessagingException
